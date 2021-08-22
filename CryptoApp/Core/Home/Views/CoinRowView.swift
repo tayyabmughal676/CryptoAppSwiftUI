@@ -51,9 +51,10 @@ extension CoinRowView{
                 .font(.caption)
                 .foregroundColor(Color.theme.secondaryText)
                 .frame(minWidth: 30)
-            Circle()
+            
+            CoinImageVIew(coin: coin)
                 .frame(width: 30, height: 30)
-                .foregroundColor(/*@START_MENU_TOKEN@*/.blue/*@END_MENU_TOKEN@*/)
+            
             Text(coin.symbol.uppercased())
                 .font(.headline)
                 .padding(.leading, 6)
