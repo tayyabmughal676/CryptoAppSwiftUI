@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 
-
 class LocalFileManager {
     
     static let instance = LocalFileManager()
@@ -59,7 +58,6 @@ class LocalFileManager {
         }
     }
     
-    
     private func getURLForFolder(folderName: String) -> URL?{
         guard  let url = FileManager
                 .default
@@ -68,8 +66,6 @@ class LocalFileManager {
         }
         return url.appendingPathComponent(folderName)
     }
-    
-    
     
     private func getURLForImage(imageName: String, folderName: String) -> URL?{
         guard let folderURL = getURLForFolder(folderName: folderName) else{
