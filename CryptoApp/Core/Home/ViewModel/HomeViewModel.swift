@@ -15,9 +15,16 @@ class HomeViewModel: ObservableObject{
     @Published var portfolioCoins: [CoinModel] = []
     @Published var searchText: String = ""
     
+    @Published var statistics: [StatisticModel] = [
+        StatisticModel(title: "Title 1", value: "Value 1", percentageChange: 1),
+        StatisticModel(title: "Title 2", value: "Value 2"),
+        StatisticModel(title: "Title 3", value: "Value 3"),
+        StatisticModel(title: "Title 4", value: "Value 4", percentageChange: -7.0)
+    ]
+    
     private let dataService = CoinDataService()
     private var cancellables = Set<AnyCancellable>()
-    
+
     init() {
         addSubscribers()
     }
@@ -49,7 +56,8 @@ class HomeViewModel: ObservableObject{
         let lowercasedText = text.lowercased()
         
         return coins.filter { (coin) -> Bool in
-            return coin.name.lowercased().contains(lowercasedText) ||       coin.symbol.lowercased().contains(lowercasedText) ||
+            return coin.name.lowercased().contains(lowercasedText) ||
+                coin.symbol.lowercased().contains(lowercasedText) ||
                 coin.id.lowercased().contains(lowercasedText)
         }
     }
