@@ -24,7 +24,7 @@ class HomeViewModel: ObservableObject{
     
     private let dataService = CoinDataService()
     private var cancellables = Set<AnyCancellable>()
-
+    
     init() {
         addSubscribers()
     }
@@ -46,6 +46,7 @@ class HomeViewModel: ObservableObject{
                 self?.allCoins = returnedCoins
             }
             .store(in: &cancellables)
+        print("Coin Data: \(dataService.$allCoins)")
     }
     
     private func filterCoins(text: String, coins: [CoinModel]) -> [CoinModel]{
