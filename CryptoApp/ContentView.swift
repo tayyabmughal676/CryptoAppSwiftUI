@@ -20,7 +20,7 @@ struct ContentView: View {
                     .foregroundColor(Color.theme.secondaryText)
                 Text("Red Color")
                     .foregroundColor(Color.theme.red
-                )
+                    )
                 Text("Green Color")
                     .foregroundColor(Color.theme.green)
             }
@@ -31,6 +31,6 @@ struct ContentView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-            
+        
     }
 }
