@@ -26,6 +26,7 @@ class HomeViewModel: ObservableObject{
     
     private let coinDataService = CoinDataService()
     private let marketDataService = MarketDataService()
+    private let portfolioDataService = PortfolioDataService()
     private var cancellables = Set<AnyCancellable>()
     
     init() {
@@ -33,12 +34,6 @@ class HomeViewModel: ObservableObject{
     }
     
     func addSubscribers(){
-        //        Without Search
-        //        dataService.$allCoins
-        //            .sink { [weak self] (returnedCoins) in
-        //                self?.allCoins = returnedCoins
-        //            }
-        //            .store(in: &cancellables)
         
         //        With Search
         $searchText
@@ -51,14 +46,37 @@ class HomeViewModel: ObservableObject{
             .store(in: &cancellables)
         print("Coin Data: \(coinDataService.$allCoins)")
         
-//        Updates market Data
+        //        Updates market Data
         marketDataService.$marketData
             .map(mapGlobalMarketData)
             .sink { [weak self] (returnedStats) in
                 self?.statistics = returnedStats
             }
             .store(in: &cancellables)
+        
+        //        Updates Portfolio Coins
+        $allCoins
+            .combineLatest(portfolioDataService.$savedEntities)
+            .map{(coinModels, portfolioEntities) -> [CoinModel] in
+                coinModels
+                    .compactMap { (coin) -> CoinModel? in
+                        guard let entity = portfolioEntities.first(where: { $0.coinID == coin.id }) else{
+                            return nil
+                        }
+                        return coin.updateHoldings(amount: entity.amount)
+                    }
+            }
+            .sink { [weak self] (returnedCoins) in
+                self?.portfolioCoins = returnedCoins
+            }
+            .store(in: &cancellables)
     }
+    
+    
+    func updatePorfolio(coin: CoinModel, amount: Double){
+        portfolioDataService.updatePortfolio(coin: coin, amount: amount)
+    }
+    
     
     private func filterCoins(text: String, coins: [CoinModel]) -> [CoinModel]{
         guard !text.isEmpty else{
