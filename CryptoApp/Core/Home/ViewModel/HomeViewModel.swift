@@ -16,11 +16,16 @@ class HomeViewModel: ObservableObject{
     @Published var portfolioCoins: [CoinModel] = []
     @Published var searchText: String = ""
     @Published var isLoading: Bool = false
-  
+    @Published var sortOption: sortOption = .holdings
+    
     private let coinDataService = CoinDataService()
     private let marketDataService = MarketDataService()
     private let portfolioDataService = PortfolioDataService()
     private var cancellables = Set<AnyCancellable>()
+    
+    enum sortOption{
+        case rank, rankReversed, holdings, holdingsReversed, price, priceReversed
+    }
     
     init() {
         addSubscribers()
@@ -30,11 +35,12 @@ class HomeViewModel: ObservableObject{
         
         //        With Search
         $searchText
-            .combineLatest(coinDataService.$allCoins)
+            .combineLatest(coinDataService.$allCoins, $sortOption)
             .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
-            .map(filterCoins)
+            .map(filterAndSortCoins)
             .sink { [weak self] (returnedCoins) in
                 self?.allCoins = returnedCoins
+                
             }
             .store(in: &cancellables)
         print("Coin Data: \(coinDataService.$allCoins)")
@@ -44,7 +50,10 @@ class HomeViewModel: ObservableObject{
             .combineLatest(portfolioDataService.$savedEntities)
             .map(mapAllCoinsToPortfolioCoins)
             .sink { [weak self] (returnedCoins) in
-                self?.portfolioCoins = returnedCoins
+                guard let self = self else{return}
+//                self.portfolioCoins = self.sortPortfolioCoinsIfNeeded(coins: returnedCoins)
+                self.portfolioCoins = returnedCoins
+                
             }
             .store(in: &cancellables)
         
@@ -57,10 +66,10 @@ class HomeViewModel: ObservableObject{
                 self?.isLoading = false
             }
             .store(in: &cancellables)
-
+        
     }
     
-
+    
     func updatePorfolio(coin: CoinModel, amount: Double){
         portfolioDataService.updatePortfolio(coin: coin, amount: amount)
     }
@@ -69,8 +78,43 @@ class HomeViewModel: ObservableObject{
         isLoading = true
         coinDataService.getCoins()
         marketDataService.getData()
-        HapticManager.notification(type: .success)
+        HapticManager.notification(type: .success
+                                   
+        )
     }
+    
+    private func filterAndSortCoins(text: String, coins: [CoinModel], sort: sortOption) -> [CoinModel]{
+        var updatedCoins = filterCoins(text: text, coins: coins)
+        sortCoins(sort: sort, coins: &updatedCoins)
+        return updatedCoins
+    }
+    
+    private func sortCoins(sort: sortOption, coins: inout [CoinModel]){
+       
+        switch sort {
+        case .rank, .holdings:
+            coins.sort(by: {$0.rank < $1.rank})
+        case .rankReversed, .holdingsReversed:
+            coins.sort(by: {$0.rank > $1.rank})
+        case .price:
+            coins.sort(by: {$0.currentPrice > $1.currentPrice})
+        case .priceReversed:
+            coins.sort(by: {$0.currentPrice < $1.currentPrice})
+        }
+    }
+    
+//    private func sortPortfolioCoinsIfNeeded(coins: [CoinModel]) -> [CoinModel]{
+//        //        will only sort by holdings or reversedholdings if needed
+//        switch sortOption {
+//        case .holdings:
+//            return coins.sorted(by: {$0.currentHoldingValue > $1.currentHoldingValue})
+//        case .holdingsReversed:
+//            return coins.sorted(by: {$0.currentHoldingValue < $1.currentHoldingValue})
+//        default:
+//            return coins
+//        }
+//    }
+    
     
     private func filterCoins(text: String, coins: [CoinModel]) -> [CoinModel]{
         guard !text.isEmpty else{
@@ -146,24 +190,6 @@ class HomeViewModel: ObservableObject{
             btcDominace,
             portfolio
         ])
-        
         return stats
-        
     }
-    
-    
-    //    .map { (text, startingCoins) -> [CoinModel] in
-    //
-    //        guard !text.isEmpty else{
-    //            return startingCoins
-    //        }
-    //
-    //        let lowercasedText = text.lowercased()
-    //
-    //        return startingCoins.filter { (coin) -> Bool in
-    //            return coin.name.lowercased().contains(lowercasedText) ||       coin.symbol.lowercased().contains(lowercasedText) ||
-    //                coin.id.lowercased().contains(lowercasedText)
-    //        }
-    //
-    //    }
 }
